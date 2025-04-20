@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/nktauserum/crawler-service/common"
 	"github.com/nktauserum/crawler-service/pkg/crawler"
 )
 
@@ -17,7 +18,7 @@ type request struct {
 }
 
 type response struct {
-	crawler.Page
+	common.Page
 	Time string `json:"time"`
 }
 

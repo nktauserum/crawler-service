@@ -7,18 +7,12 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/nktauserum/crawler-service/common"
+	"github.com/nktauserum/crawler-service/pkg/cache"
 	"github.com/nktauserum/crawler-service/pkg/format"
 )
 
-type Page struct {
-	URL      string `json:"url"`
-	Title    string `json:"title"`
-	Sitename string `json:"sitename"`
-	Content  string `json:"content"`
-	HTML     string `json:"html"`
-}
-
-func ParseHTML(ctx context.Context, url string) (*Page, error) {
+func ParseHTML(ctx context.Context, url string) (*common.Page, error) {
 	var crawler Crawler
 
 	err := crawler.SetDestination(url)
@@ -31,7 +25,7 @@ func ParseHTML(ctx context.Context, url string) (*Page, error) {
 		return nil, err
 	}
 
-	return &Page{
+	return &common.Page{
 		Title:    article.Title,
 		URL:      url,
 		Sitename: article.SiteName,
@@ -39,7 +33,7 @@ func ParseHTML(ctx context.Context, url string) (*Page, error) {
 	}, nil
 }
 
-func ParsePDF(ctx context.Context, link string) (*Page, error) {
+func ParsePDF(ctx context.Context, link string) (*common.Page, error) {
 	start := time.Now()
 	defer func() {
 		elapsed := time.Since(start)
@@ -60,35 +54,43 @@ func ParsePDF(ctx context.Context, link string) (*Page, error) {
 	}
 	fmt.Printf("ProcessPDF took %s\n", time.Since(processStart))
 
-	return &Page{
+	return &common.Page{
 		Content: text,
 	}, nil
 }
 
-func GetContent(ctx context.Context, link string) (Page, error) {
+func GetContent(ctx context.Context, link string) (common.Page, error) {
+	cache := cache.NewCache()
+	cached_page, exists := cache.Get(link)
+	if exists {
+		return cached_page.Page, nil
+	}
+
 	page_url, err := url.Parse(link)
 	if err != nil {
-		return Page{}, err
+		return common.Page{}, err
 	}
 
 	ext := filepath.Ext(page_url.Path)
 	if ext == ".pdf" {
 		content, err := ParsePDF(ctx, link)
 		if err != nil {
-			return Page{}, err
+			return common.Page{}, err
 		}
 		return *content, nil
 	}
 
 	content, err := ParseHTML(ctx, link)
 	if err != nil {
-		return Page{}, err
+		return common.Page{}, err
 	}
 
 	content.Content, err = format.HTMLtoMarkdown(&content.HTML)
 	if err != nil {
-		return Page{}, err
+		return common.Page{}, err
 	}
+
+	cache.Set(link, *content)
 
 	return *content, nil
 }
