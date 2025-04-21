@@ -5,5 +5,5 @@ type Page struct {
 	Title    string `json:"title"`
 	Sitename string `json:"sitename"`
 	Content  string `json:"content"`
-	HTML     string `json:"html"`
+	HTML     string `json:"html,omitempty"`
 }

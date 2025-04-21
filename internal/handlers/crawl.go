@@ -14,7 +14,8 @@ import (
 )
 
 type request struct {
-	URL string `json:"url"`
+	URL         string `json:"url"`
+	IncludeHTML bool   `json:"include_html"`
 }
 
 type response struct {
@@ -55,6 +56,10 @@ func Crawl(c *gin.Context) {
 			"error": err.Error(),
 		})
 		return
+	}
+
+	if !request.IncludeHTML {
+		page.HTML = ""
 	}
 
 	crawler_response := response{
