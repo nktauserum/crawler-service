@@ -3,8 +3,6 @@ package crawler
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"path/filepath"
 	"time"
 
 	"github.com/nktauserum/crawler-service/common"
@@ -66,28 +64,30 @@ func GetContent(ctx context.Context, link string) (common.Page, error) {
 		return cached_page.Page, nil
 	}
 
-	page_url, err := url.Parse(link)
+	mime_type, err := CheckContentType(link)
 	if err != nil {
 		return common.Page{}, err
 	}
 
-	ext := filepath.Ext(page_url.Path)
-	if ext == ".pdf" {
-		content, err := ParsePDF(ctx, link)
+	var content *common.Page
+
+	if mime_type == PDF {
+		content, err = ParsePDF(ctx, link)
 		if err != nil {
 			return common.Page{}, err
 		}
-		return *content, nil
-	}
+	} else if mime_type == Text {
+		content, err = ParseHTML(ctx, link)
+		if err != nil {
+			return common.Page{}, err
+		}
 
-	content, err := ParseHTML(ctx, link)
-	if err != nil {
-		return common.Page{}, err
-	}
-
-	content.Content, err = format.HTMLtoMarkdown(&content.HTML)
-	if err != nil {
-		return common.Page{}, err
+		content.Content, err = format.HTMLtoMarkdown(&content.HTML)
+		if err != nil {
+			return common.Page{}, err
+		}
+	} else {
+		return common.Page{}, fmt.Errorf("unknown type %s", mime_type)
 	}
 
 	cache.Set(link, *content)

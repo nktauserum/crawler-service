@@ -3,17 +3,27 @@ package crawler
 import (
 	"context"
 	"testing"
-	"time"
 )
 
 func TestMakeReadable(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	raw_content, err := GetContent(ctx, "https://rdi.berkeley.edu/llm-agents/assets/llm-reasoning.pdf")
-	if err != nil {
-		t.Fatal(err)
+	tt := []struct {
+		Name       string
+		URL        string
+		WantedType ContentType
+	}{
+		{Name: "HTML page", URL: "https://m.povar.ru/recipes/oladi_na_drojjah_na_vode-40123.html", WantedType: Text},
+		{Name: "PDF file", URL: "https://arxiv.org/pdf/2407.16833", WantedType: PDF},
 	}
 
-	t.Log(raw_content.Content)
+	for _, test := range tt {
+		t.Run(test.Name, func(t *testing.T) {
+
+			raw_content, err := GetContent(context.Background(), test.URL)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			t.Log(raw_content.Content)
+		})
+	}
 }
