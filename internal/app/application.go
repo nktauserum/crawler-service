@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nktauserum/crawler-service/internal/handlers"
@@ -18,7 +19,14 @@ func NewApplication(port int) *application {
 func (app *application) Run() error {
 	router := gin.Default()
 
-	router.POST("/crawl", handlers.Crawl)
+	// Simple health check
+	router.GET("/", func(ctx *gin.Context) { ctx.Status(http.StatusOK) })
+
+	authorized := router.Group("/")
+	authorized.Use(handlers.CheckAPIToken())
+	{
+		authorized.POST("/crawl", handlers.Crawl)
+	}
 
 	return router.Run(fmt.Sprintf(":%d", app.port))
 }
