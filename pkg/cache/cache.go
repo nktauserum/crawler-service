@@ -1,17 +1,26 @@
 package cache
 
 import (
+	"log"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/nktauserum/crawler-service/common"
 )
 
+type CacheInterface interface {
+	Get(url string) (page, bool)
+	Set(url string, new_page common.Page)
+}
+
 var (
 	once  sync.Once
-	cache Cache
+	cache CacheInterface
 
-	ttl = 5 * time.Minute
+	// TTL полгода
+	ttl = 6 * 30 * (24 * time.Hour)
 )
 
 type Cache struct {
@@ -24,12 +33,27 @@ type page struct {
 	TTL time.Time
 }
 
-func NewCache() *Cache {
+func NewCache() CacheInterface {
 	once.Do(func() {
-		cache = Cache{memory: make(map[string]page)}
+		_ = godotenv.Load(".env")
+		cacheType := os.Getenv("CACHE_TYPE")
+
+		if cacheType == "redis" {
+			redisAddr := os.Getenv("REDIS_ADDR")
+			redisPassword := os.Getenv("REDIS_PASSWORD")
+
+			if redisAddr == "" {
+				redisAddr = "localhost:6379" // по умолчанию
+			}
+
+			cache = NewRedisCache(redisAddr, redisPassword, 0)
+		} else {
+			log.Println("Using in-memory cache by default")
+			cache = &Cache{memory: make(map[string]page)}
+		}
 	})
 
-	return &cache
+	return cache
 }
 
 // Получаем запись из кэша. Возвращает страницу и флаг наличия
