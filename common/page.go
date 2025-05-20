@@ -7,3 +7,10 @@ type Page struct {
 	Content  string `json:"content"`
 	HTML     string `json:"html,omitempty"`
 }
+
+type Task struct {
+	UUID   string `json:"uuid"`
+	URL    string `json:"url"`
+	Status string `json:"status"`
+	Result string `json:"result"`
+}
