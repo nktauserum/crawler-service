@@ -13,13 +13,12 @@ func CheckAPIToken() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		expectedToken := os.Getenv("API_TOKEN")
 
-		// Если API_TOKEN не установлен, считаем что аутентификация отключена
+		// Если API_TOKEN не установлен, считаем что аутентификация в целом отключена
 		if expectedToken == "" {
 			c.Next()
 			return
 		}
 
-		// Проверка наличия заголовка Authorization
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": "Authorization header required",
@@ -28,7 +27,6 @@ func CheckAPIToken() gin.HandlerFunc {
 			return
 		}
 
-		// Проверка формата Bearer
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 || parts[0] != "Bearer" {
 			c.JSON(http.StatusUnauthorized, gin.H{
