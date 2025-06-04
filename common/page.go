@@ -1,9 +1,9 @@
 package common
 
 type Page struct {
-	URL      string `json:"url"`
-	Title    string `json:"title"`
-	Sitename string `json:"sitename"`
-	Content  string `json:"content"`
+	URL      string `json:"url,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Sitename string `json:"sitename,omitempty"`
+	Content  string `json:"content,omitempty"`
 	HTML     string `json:"html,omitempty"`
 }

@@ -26,6 +26,7 @@ func (app *application) Run() error {
 	authorized.Use(handlers.CheckAPIToken())
 	{
 		authorized.POST("/crawl", handlers.Crawl)
+		authorized.GET("/task", handlers.Task)
 	}
 
 	return router.Run(fmt.Sprintf(":%d", app.port))

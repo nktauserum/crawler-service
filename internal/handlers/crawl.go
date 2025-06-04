@@ -1,26 +1,20 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
+	"github.com/google/uuid"
+	"github.com/nktauserum/crawler-service/common"
+	"github.com/nktauserum/crawler-service/internal/worker"
 	"io"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/nktauserum/crawler-service/common"
-	"github.com/nktauserum/crawler-service/pkg/crawler"
 )
 
 type request struct {
 	URL         string `json:"url"`
 	IncludeHTML bool   `json:"include_html"`
-}
-
-type response struct {
-	common.Page
-	Time string `json:"time"`
 }
 
 func Crawl(c *gin.Context) {
@@ -50,22 +44,9 @@ func Crawl(c *gin.Context) {
 		return
 	}
 
-	page, err := crawler.GetContent(context.Background(), request.URL)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	id := uuid.New().String()
+	task := common.Task{ID: id, URL: request.URL, Status: "pending", Time: time.Since(start_time).String()}
+	go worker.Process(task)
 
-	if !request.IncludeHTML {
-		page.HTML = ""
-	}
-
-	crawler_response := response{
-		Page: page,
-		Time: fmt.Sprint(time.Since(start_time).Seconds()),
-	}
-
-	c.JSON(http.StatusOK, crawler_response)
+	c.JSON(http.StatusOK, task)
 }
