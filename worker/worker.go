@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -16,7 +17,7 @@ import (
 
 func main() {
 	log.Println("Worker started")
-	worker := NewWorker(5, "localhost:50000")
+	worker := NewWorker(5, os.Getenv("GRPC_PORT"))
 
 	worker.StartPolling()
 }
